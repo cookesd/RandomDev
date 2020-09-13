@@ -6,6 +6,7 @@ Created on Sun Sep 13 13:43:33 2020
 """
 
 import tkinter as tk
+from .ScreenFrames import *
 
 class ATM(object):
     def __init__(self):
@@ -21,8 +22,19 @@ class ATM(object):
         
         # Place Objects
         # self.sub_frames = 
+        # self.screen.frame.grid(row=0,column=0)
+        # self.keypad.frame.grid(row=0,column=1)
+        # self.deposit_slot.frame.grid(row=1,column=0)
+        # self.cash_dispenser.frame.grid(row=1,column=1)
+        self.screen.frame.pack()
+        self.keypad.frame.pack()
+        self.deposit_slot.frame.pack()
+        self.cash_dispenser.frame.pack()
         
         self.root.mainloop()
+        
+    def __repr__(self):
+        print('This is the ATM')
         
     def display_user_input(self,value):
         '''Pass user input value to the screen to display'''
@@ -52,7 +64,7 @@ class ATMKeypad(object):
                                           command = self.atm.backspace)
         self.input_list = list()
         
-    def get_button_value(value):
+    def get_button_value(self,value):
         self.input_list.append(value)
         self.atm.display_user_input(value)
         
@@ -63,7 +75,7 @@ class NumButton(tk.Button):
     def __init__(self,keypad,keypad_frame,value):
         tk.Button.__init__(keypad_frame,text=str(value),
                            relief='groove',borderwidth=5,
-                           command = self.pass_value)
+                           command = self.pass_value,takefocus=False)
         self.keypad = keypad
         self.keypad_frame = keypad_frame
         self.value = value
@@ -80,20 +92,25 @@ class ATMScreen(object):
         self.atm_frame = atm_frame
         self.frame = tk.Frame(self.atm_frame)
         
-        self.sub_frame_dict = {'menu':MenuFrame,
+        self.sub_frame_dict = {'welcome':WelcomeFrame,
+                               'menu':MenuFrame,
                               'exit':ExitFrame,
                               'view_balance':ViewBalanceFrame,
                               'withdrawal':WithdrawalFrame,
                               'deposit':DepositFrame}
         # Make the actual sub frames and pack in the ATMScreen frame
-        for key,Sub_Frame in sub_frame_dict.items():
-            frame = Sub_Frame(self,self.frame)
-            frame.pack(expand=True,fill='both')
-            self.sub_frame_dict[key] = frame
+        for key,Sub_Frame in self.sub_frame_dict.items():
+            print('{:*^20}'.format(key))
+            print('{}'.format(self,self.frame))
+            sub_frame = Sub_Frame(screen=self,screen_frame=self.frame)
+            sub_frame.frame.pack(expand=True,fill='both')
+            self.sub_frame_dict[key] = sub_frame
         
         # Raise the menu frame to the top
-        self.current_frame = 'menu'
+        self.current_frame = 'welcome'
         self.raise_frame(self.current_frame)
+    def __repr__(self):
+        return('This is the ATMScreen')
     
     def display_user_input(self,value):
         '''Passess the value to the current frame to display in prompt entry'''
@@ -107,10 +124,10 @@ class ATMScreen(object):
         for frame in self.sub_frame_dict.keys():
             if frame != f:
                 # Unpack all other frames
-                self.sub_frame_dict[frame].pack_forget()
+                self.sub_frame_dict[frame].frame.pack_forget()
             else:
                 # Pack this frame
-                self.sub_frame_dict[frame].pack(expand=True,fill='both')
+                self.sub_frame_dict[frame].frame.pack(expand=True,fill='both')
                 self.current_frame = frame
         
 
@@ -130,15 +147,17 @@ class ATMCashDispenser(object):
         
     
 #%%
-root = tk.Tk()
-f = tk.Frame(root,relief='ridge',borderwidth=5)
-f.pack(expand=True)
-# f.pack(fill='both')
-# f.pack(expand=True,fill='both')
-f2 = tk.Frame(root,relief='sunken',bg='red')
-f2.pack(after = f)
-lab = tk.Label(f,text='Hello World!')
-lab.pack()
-lab2 = tk.Label(f2,text='HWorld')
-lab2.pack()
-root.mainloop()
+
+if __name__ == '__main__':
+    root = tk.Tk()
+    f = tk.Frame(root,relief='ridge',borderwidth=5)
+    f.pack(expand=True)
+    # f.pack(fill='both')
+    # f.pack(expand=True,fill='both')
+    f2 = tk.Frame(root,relief='sunken',bg='red')
+    f2.pack(after = f)
+    lab = tk.Label(f,text='Hello World!')
+    lab.pack()
+    lab2 = tk.Label(f2,text='HWorld')
+    lab2.pack()
+    root.mainloop()
