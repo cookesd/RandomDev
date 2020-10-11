@@ -26,6 +26,9 @@ class GeneralFrame(object):
         self.prompt_entry = None
         self.options_dict = dict()
         
+    def __repr__(self):
+        return('{}'.format(self.title_text))
+        
     def display_user_input(self,value):
         '''Gets the current widget with focus and
         inserts the value where the cursor is'''

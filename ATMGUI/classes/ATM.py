@@ -57,12 +57,42 @@ class ATMKeypad(object):
     def __init__(self,atm,atm_frame):
         self.atm = atm
         self.frame = tk.Frame(atm_frame)
-        self.num_button_dict = {i:NumButton(self,self.frame,i) for i in range(10)} # Need to do something with this
+        
+        sticky_dict = {0:'E',1:'NSEW',2:'W'}
+        button_locs = {**{str(i):{'row':(i-1) // 3,'col':(i-1) % 3,
+                                  'sticky':sticky_dict[(i-1) % 3]}
+                       for i in range(1,10)},
+                       # Locations for the 0, enter and backspace buttons
+                       **{'0':{'row':3,'col':1,
+                               'sticky':sticky_dict[1]},
+                          'Enter':{'row':3,'col':2,
+                                   'sticky':sticky_dict[2]},
+                          'Backspace':{'row':3,'col':0,
+                                       'sticky':sticky_dict[0]}}}
+        
+        self.num_button_dict = {i:NumButton(self,self.frame,i,
+                                            row=button_locs[str(i)]['row'],
+                                            col=button_locs[str(i)]['col'],
+                                            sticky=button_locs[str(i)]['sticky']) for i in range(10)} # Need to do something with this
         self.enter_button = tk.Button(self.frame,text = 'Enter',
-                                      command = self.enter_input)
+                                      command = self.enter_input,
+                                      relief='groove',
+                                      borderwidth=5)
         self.backspace_button = tk.Button(self.frame,text='Backspace',
-                                          command = self.atm.backspace)
+                                          command = self.atm.backspace,
+                                          relief='groove',
+                                          borderwidth=5)
         self.input_list = list()
+        
+        
+        # for num,button in self.num_button_dict.items():
+        #     button.grid(column = button_locs[str(num)]['col'],
+        #                 row = button_locs[str(num)]['row'])
+        self.enter_button.grid(column = button_locs['Enter']['col'],
+                               row = button_locs['Enter']['row'])
+        self.backspace_button.grid(column = button_locs['Backspace']['col'],
+                                   row = button_locs['Backspace']['row'])
+        
         
     def get_button_value(self,value):
         self.input_list.append(value)
@@ -72,13 +102,14 @@ class ATMKeypad(object):
         self.atm.enter_input()
 
 class NumButton(tk.Button):
-    def __init__(self,keypad,keypad_frame,value):
-        tk.Button.__init__(keypad_frame,text=str(value),
+    def __init__(self,keypad,keypad_frame,value,row,col,sticky='NSEW'):
+        tk.Button.__init__(self,keypad_frame,text=str(value),
                            relief='groove',borderwidth=5,
                            command = self.pass_value,takefocus=False)
         self.keypad = keypad
         self.keypad_frame = keypad_frame
         self.value = value
+        self.grid(row=row,column=col,sticky=sticky)
     def pass_value(self):
         '''
         Pass the button's value to the keypad to handle
@@ -100,11 +131,11 @@ class ATMScreen(object):
                               'deposit':DepositFrame}
         # Make the actual sub frames and pack in the ATMScreen frame
         for key,Sub_Frame in self.sub_frame_dict.items():
-            print('{:*^20}'.format(key))
-            print('{}'.format(self,self.frame))
             sub_frame = Sub_Frame(screen=self,screen_frame=self.frame)
             sub_frame.frame.pack(expand=True,fill='both')
             self.sub_frame_dict[key] = sub_frame
+            print('{:*^20}'.format(key))
+            print('{}\n{}'.format(self,sub_frame))
         
         # Raise the menu frame to the top
         self.current_frame = 'welcome'
