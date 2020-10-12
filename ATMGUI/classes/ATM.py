@@ -6,7 +6,10 @@ Created on Sun Sep 13 13:43:33 2020
 """
 
 import tkinter as tk
-from .ScreenFrames import *
+from .ScreenFrames import (WelcomeFrame, MenuFrame, ExitFrame,
+                           ViewBalanceFrame, WithdrawalFrame, DepositFrame)
+from .BankDatabase import BankDatabase
+
 
 class ATM(object):
     def __init__(self):
@@ -26,6 +29,7 @@ class ATM(object):
                                            relief_type=relief_type,border_width=border_width)
         self.cash_dispenser = ATMCashDispenser(self,self.root,
                                                relief_type=relief_type,border_width=border_width)
+        self.bank_database = BankDatabase(pd.read_csv('../data/bank_database.txt'))
         
         # Place Objects
         # self.sub_frames = 

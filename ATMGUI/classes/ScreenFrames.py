@@ -159,16 +159,42 @@ class DepositFrame(TransactionFrame):
         
 
 class Transaction(object):
-    def __init__():
+    def __init__(self,account_num,transaction_type):
+        self.account_num = account_num
+        self.transaction_type = transaction_type
+        
+    def conduct_transaction(self):
+        # Maybe I pass the transaction to the ATM
+        # and the ATM handles it based on type
+        # that way I don't have to overload the
+        # method
         pass
         
 class ViewBalance(Transaction):
-    def __init__():
-        pass
+    def __init__(self,account_num):
+        super().__init__(account_num,
+                         transaction_type='ViewBalance')
+        
+    def conduct_transaction(self):
+        super().conduct_transaction()
+        # do some ViewBalance specific stuff
     
 class Withdrawal(Transaction):
-    def __init__():
-        pass
+    def __init__(self,account_num,amount):
+        super().__init__(account_num,
+                         transaction_type='Withdrawal')
+        self.amount = amount
+        
+    def conduct_transaction(self):
+        super().conduct_transaction()
+        # do some withdrawal specific stuff
+        
 class Deposit(Transaction):
-    def __init__():
-        pass
+    def __init__(self,account_num,amount):
+        super().__init(acount_num,
+                       transaction_type =  'Deposit')
+        self.amount = amount
+        
+    def conduct_transaction(self):
+        super().conduct_transaction()
+        # do some deposit specific stuff
