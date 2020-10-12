@@ -11,25 +11,42 @@ from .ScreenFrames import *
 class ATM(object):
     def __init__(self):
         self.root = tk.Tk()
-        self.frame = tk.Frame(self.root)
-        self.frame.pack(expand=True,fill='both')
+        self.root.geometry('500x300')
+        # self.frame = tk.Frame(self.root)
+        # self.frame.pack(expand=True,fill='both')
         
+        relief_type='sunken'
+        border_width=10
         # Make Objects and place 
-        self.screen = ATMScreen(self,self.frame)
-        self.keypad = ATMKeypad(self,self.frame)
-        self.deposit_slot = ATMDepositSlot(self,self.frame)
-        self.cash_dispenser = ATMCashDispenser(self,self.frame)
+        self.screen = ATMScreen(self,self.root,
+                                relief_type=relief_type,border_width=border_width)
+        self.keypad = ATMKeypad(self,self.root,
+                                relief_type=relief_type,border_width=border_width)
+        self.deposit_slot = ATMDepositSlot(self,self.root,
+                                           relief_type=relief_type,border_width=border_width)
+        self.cash_dispenser = ATMCashDispenser(self,self.root,
+                                               relief_type=relief_type,border_width=border_width)
         
         # Place Objects
         # self.sub_frames = 
-        # self.screen.frame.grid(row=0,column=0)
-        # self.keypad.frame.grid(row=0,column=1)
-        # self.deposit_slot.frame.grid(row=1,column=0)
-        # self.cash_dispenser.frame.grid(row=1,column=1)
-        self.screen.frame.pack()
-        self.keypad.frame.pack()
-        self.deposit_slot.frame.pack()
-        self.cash_dispenser.frame.pack()
+        self.screen.frame.grid(row=0,column=0,columnspan=2,
+                               sticky='NSEW')
+        self.keypad.frame.grid(row=1,column=0,columnspan=2)
+        self.deposit_slot.frame.grid(row=2,column=0,
+                                     sticky='NSEW')
+        self.cash_dispenser.frame.grid(row=2,column=1,
+                                       sticky='NSEW')
+        # self.screen.frame.pack()
+        # self.keypad.frame.pack()
+        # self.deposit_slot.frame.pack()
+        # self.cash_dispenser.frame.pack()
+        
+        # Configure rows / columns to resize on window resize
+        self.root.rowconfigure(0,weight=2)
+        # self.frame.rowconfigure(1,weight=2)
+        self.root.rowconfigure(2,weight=1) # third row gets half as big as first
+        self.root.columnconfigure(0,weight=1)
+        self.root.columnconfigure(1,weight=1)
         
         self.root.mainloop()
         
@@ -54,9 +71,10 @@ class ATM(object):
         pass
     
 class ATMKeypad(object):
-    def __init__(self,atm,atm_frame):
+    def __init__(self,atm,atm_frame,relief_type,border_width):
         self.atm = atm
-        self.frame = tk.Frame(atm_frame)
+        self.frame = tk.Frame(atm_frame,
+                              relief=relief_type,borderwidth=border_width)
         
         sticky_dict = {0:'E',1:'NSEW',2:'W'}
         button_locs = {**{str(i):{'row':(i-1) // 3,'col':(i-1) % 3,
@@ -89,9 +107,11 @@ class ATMKeypad(object):
         #     button.grid(column = button_locs[str(num)]['col'],
         #                 row = button_locs[str(num)]['row'])
         self.enter_button.grid(column = button_locs['Enter']['col'],
-                               row = button_locs['Enter']['row'])
+                               row = button_locs['Enter']['row'],
+                               sticky=button_locs['Enter']['sticky'])
         self.backspace_button.grid(column = button_locs['Backspace']['col'],
-                                   row = button_locs['Backspace']['row'])
+                                   row = button_locs['Backspace']['row'],
+                                   sticky=button_locs['Backspace']['sticky'])
         
         
     def get_button_value(self,value):
@@ -118,10 +138,11 @@ class NumButton(tk.Button):
         
 #%% ATMScreen
 class ATMScreen(object):
-    def __init__(self,atm,atm_frame):
+    def __init__(self,atm,atm_frame,relief_type,border_width):
         self.atm = atm
         self.atm_frame = atm_frame
-        self.frame = tk.Frame(self.atm_frame)
+        self.frame = tk.Frame(self.atm_frame,
+                              relief=relief_type,borderwidth=border_width)
         
         self.sub_frame_dict = {'welcome':WelcomeFrame,
                                'menu':MenuFrame,
@@ -164,17 +185,23 @@ class ATMScreen(object):
 
 #%% ATMDepositSlot
 class ATMDepositSlot(object):
-    def __init__(self,atm,atm_frame):
+    def __init__(self,atm,atm_frame,relief_type,border_width):
         self.atm = atm
         self.atm_frame = atm_frame
-        self.frame = tk.Frame(self.atm_frame)
+        self.frame = tk.Frame(self.atm_frame,
+                              relief=relief_type,borderwidth=border_width)
+        self.name_label = tk.Label(self.frame,text='Deposit money here.')
+        self.name_label.pack()
 
 #%% ATMCashDispenser
 class ATMCashDispenser(object):
-    def __init__(self,atm,atm_frame):
+    def __init__(self,atm,atm_frame,relief_type,border_width):
         self.atm = atm
         self.atm_frame = atm_frame
-        self.frame = tk.Frame(self.atm_frame)
+        self.frame = tk.Frame(self.atm_frame,
+                              relief=relief_type,borderwidth=border_width)
+        self.name_label = tk.Label(self.frame,text='Receive money here.')
+        self.name_label.pack()
         
     
 #%%
