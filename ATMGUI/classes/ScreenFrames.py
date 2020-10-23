@@ -66,7 +66,7 @@ class GeneralFrame(object):
     def clear_entries(self):
         '''Clear's all the entry widgets in the frames entry list'''
         for entry in self.entry_dict.values():
-            entry.delete(first=0)
+            entry.delete(first=0,last=len(entry.get()))
         
         
         
@@ -88,6 +88,9 @@ class WelcomeFrame(GeneralFrame):
         self.password_text = 'Enter Password'
         self.init_widgets()
         
+    def init_widgets(self):
+        '''Initializes the widgets to their basic values'''
+        super().init_widgets() # call the super init widgets function
         # Make the password label and entry
         self.password_label = tk.Label(self.frame,text = self.password_text)
         self.password_entry = tk.Entry(self.frame)
@@ -97,6 +100,11 @@ class WelcomeFrame(GeneralFrame):
         self.password_entry.grid(row=3,column=1,sticky='NS')
         # Add the password entry to the entry list to be able to clear
         self.entry_dict['password'] = self.password_entry
+        
+    def invalid_customer_info(self):
+        self.title_label.configure(text='\n'.join([self.title_text,
+                                                   'Account number or password are invalid']))
+        self.clear_entries()
     
         
 class MenuFrame(GeneralFrame):

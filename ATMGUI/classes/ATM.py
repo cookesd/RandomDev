@@ -17,6 +17,7 @@ class ATM(object):
     def __init__(self):
         self.root = tk.Tk()
         self.root.geometry('500x300')
+        self.root.title('ATM App')
         # self.frame = tk.Frame(self.root)
         # self.frame.pack(expand=True,fill='both')
         
@@ -82,7 +83,12 @@ class ATM(object):
         pass
     
     def validate_customer(self,account_num,password):
-        print('In validate_customer: account_num={} \npassword={}'.format(account_num,password))
+        is_valid = self.bank_database.verify_password(account_num=account_num,
+                                                      password=password)
+        if is_valid:
+            self.screen.raise_frame('menu')
+        else:
+            self.screen.invalid_customer_info()
         # pass
     
 class ATMKeypad(object):
@@ -202,10 +208,16 @@ class ATMScreen(object):
                 # Pack this frame
                 self.sub_frame_dict[frame].frame.pack(expand=True,fill='both')
                 self.current_frame = frame
+                self.sub_frame_dict[frame].init_widgets() # resets the labels
+                self.sub_frame_dict[frame].clear_entries() # clears the entry boxes
                 # frame.prompt_entry.focus_set()
     def backspace(self):
         '''Deletes the last value in the entry box'''
         self.sub_frame_dict[self.current_frame].backspace()
+    
+    def invalid_customer_info(self):
+        '''Handles case where there is invalid customer info'''
+        self.sub_frame_dict['welcome'].invalid_customer_info()
         
 
 #%% ATMDepositSlot
