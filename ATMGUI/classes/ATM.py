@@ -56,11 +56,12 @@ class ATM(object):
         self.root.columnconfigure(1,weight=1)
         
         self.screen_entry_func_dict = {'welcome':lambda **kwargs: self.validate_customer(account_num=kwargs['prompt'],password=kwargs['password']),
-                                       'menu':MenuFrame,
+                                       'menu':lambda **kwargs: self.handle_menu_entry(entry=kwargs['prompt']),
                                        'exit':ExitFrame,
                                        'view_balance':ViewBalanceFrame,
                                        'withdrawal':WithdrawalFrame,
                                        'deposit':DepositFrame}
+        self.curr_account_num = None
         
         self.root.mainloop()
         
@@ -86,9 +87,36 @@ class ATM(object):
         is_valid = self.bank_database.verify_password(account_num=account_num,
                                                       password=password)
         if is_valid:
+            self.curr_account_num = account_num
             self.screen.raise_frame('menu')
         else:
             self.screen.invalid_customer_info()
+            
+    def handle_menu_entry(self,entry):
+        print(entry)
+        valid_entry_dict = {'1':self.begin_balance_inquiry,
+                            '2':self.begin_withdrawal,
+                            '3':self.begin_deposit,
+                            '4':self.begin_exit}
+        valid_entry_dict.get(entry,self.invalid_menu_entry)()
+        
+    def begin_balance_inquiry(self):
+        # self.transaction = ViewBalance(self.account_num)
+        self.screen.raise_frame('view_balance')
+        
+    def begin_withdrawal(self):
+        # self.transaction = Withdrawal(self.account_num)
+        self.screen.raise_frame('withdrawal')
+        
+    def begin_deposit(self):
+        # self.transaction = ViewBalance(self.account_num)
+        self.screen.raise_frame('deposit')
+        
+    def begin_exit(self):
+        self.screen.raise_frame('exit')
+        
+    def invalid_menu_entry(self):
+        print('The entry was invalid')
         # pass
     
 class ATMKeypad(object):

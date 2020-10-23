@@ -133,6 +133,7 @@ class ExitFrame(GeneralFrame):
         self.prompt_text = ''
         
         self.init_widgets()
+        self.prompt_entry.destroy()
         
 class TransactionFrame(GeneralFrame):
     def __init__(self,screen,screen_frame):
