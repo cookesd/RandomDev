@@ -6,6 +6,8 @@ Created on Sun Sep 13 13:43:33 2020
 """
 
 import tkinter as tk
+import pandas as pd
+import os
 from .ScreenFrames import (WelcomeFrame, MenuFrame, ExitFrame,
                            ViewBalanceFrame, WithdrawalFrame, DepositFrame)
 from .BankDatabase import BankDatabase
@@ -29,7 +31,7 @@ class ATM(object):
                                            relief_type=relief_type,border_width=border_width)
         self.cash_dispenser = ATMCashDispenser(self,self.root,
                                                relief_type=relief_type,border_width=border_width)
-        self.bank_database = BankDatabase(pd.read_csv('../data/bank_database.txt'))
+        self.bank_database = BankDatabase(pd.read_csv('./data/bank_database.txt'))
         
         # Place Objects
         # self.sub_frames = 
@@ -52,6 +54,13 @@ class ATM(object):
         self.root.columnconfigure(0,weight=1)
         self.root.columnconfigure(1,weight=1)
         
+        self.screen_entry_func_dict = {'welcome':lambda **kwargs: self.validate_customer(account_num=kwargs['prompt'],password=kwargs['password']),
+                                       'menu':MenuFrame,
+                                       'exit':ExitFrame,
+                                       'view_balance':ViewBalanceFrame,
+                                       'withdrawal':WithdrawalFrame,
+                                       'deposit':DepositFrame}
+        
         self.root.mainloop()
         
     def __repr__(self):
@@ -62,7 +71,8 @@ class ATM(object):
         self.screen.display_user_input(value)
         
     def enter_input(self):
-        self.screen.enter_input()
+        entry_val_dict,curr_frame = self.screen.enter_input()
+        self.screen_entry_func_dict[curr_frame](**entry_val_dict)
         
     def backspace(self):
         '''Tells the screen to delete the last value in the user input entry widget'''
@@ -72,7 +82,8 @@ class ATM(object):
         pass
     
     def validate_customer(self,account_num,password):
-        pass
+        print('In validate_customer: account_num={} \npassword={}'.format(account_num,password))
+        # pass
     
 class ATMKeypad(object):
     def __init__(self,atm,atm_frame,relief_type,border_width):
@@ -173,7 +184,13 @@ class ATMScreen(object):
         self.sub_frame_dict[self.current_frame].display_user_input(value)
         
     def enter_input(self):
-        self.sub_frame_dict[self.current_frame].enter_input()
+        '''Get and return a dict of entry values from the current screen.
+        And text specifying the current frame'''
+        entry_val_dict = self.sub_frame_dict[self.current_frame].enter_input()
+        # print('got values {} from frame {}'.format(', '.join([': '.join([str(item[0]),str(item[1])])
+        #                                                       for item in entry_val_dict.items()]),
+        #                                            self.current_frame))
+        return(entry_val_dict,self.current_frame)
         
     def raise_frame(self,f):
         '''Raises the specified frame to the top'''
@@ -185,6 +202,10 @@ class ATMScreen(object):
                 # Pack this frame
                 self.sub_frame_dict[frame].frame.pack(expand=True,fill='both')
                 self.current_frame = frame
+                # frame.prompt_entry.focus_set()
+    def backspace(self):
+        '''Deletes the last value in the entry box'''
+        self.sub_frame_dict[self.current_frame].backspace()
         
 
 #%% ATMDepositSlot

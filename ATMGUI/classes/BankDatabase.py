@@ -5,8 +5,10 @@ Created on Mon Oct 12 16:16:43 2020
 @author: dakar
 """
 
+
+
 class BankDatabase(object):
-    def __init__(account_db,account_col = 'account_num',
+    def __init__(self,account_db,account_col = 'account_num',
                  password_col = 'password',balance_col = 'balance'):
         self.account_db = account_db
         self.account_col = account_col
@@ -15,8 +17,8 @@ class BankDatabase(object):
     
     def verify_password(self,account_num,password):
         # Looks for the provided account number and password
-        account = self.account_db[(self.account_db[self.account_col] == account_num) &
-                                  (self.account_db.[self.pw_col]== password)]
+        account = self.account_db[((self.account_db[self.account_col] == account_num) &
+                                  (self.account_db[self.pw_col]== password))]
         if len(account > 0):
             # returns a series of the account info
             # if for some reason there are multiple accounts, this returns the first

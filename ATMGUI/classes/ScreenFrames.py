@@ -32,7 +32,18 @@ class GeneralFrame(object):
     def display_user_input(self,value):
         '''Gets the current widget with focus and
         inserts the value where the cursor is'''
-        self.frame.focus_get.insert(tk.INSERT,str(value))
+        curr_widget = self.frame.focus_get()
+        if curr_widget:
+            curr_widget.insert(tk.INSERT,str(value))
+            
+    def backspace(self):
+        '''Removes last value in the widget that has the focus'''
+        curr_widget = self.frame.focus_get()
+        if curr_widget:
+            the_string = curr_widget.get()
+            str_length = len(the_string)
+            if str_length > 0:
+                curr_widget.delete(str_length-1)
         
     def init_widgets(self):
         self.title_label = tk.Label(self.frame,text=self.title_text)
@@ -47,14 +58,26 @@ class GeneralFrame(object):
         self.options_label.grid(row=1,column=0,columnspan = 2,sticky = 'NSEW')
         self.prompt_label.grid(row=2,column=0,sticky='NS')
         self.prompt_entry.grid(row=2,column=1,sticky='NS')
+        self.prompt_entry.focus_set()
+        
+        # Make a list for the entry widgets
+        self.entry_dict= {'prompt':self.prompt_entry}
+    
+    def clear_entries(self):
+        '''Clear's all the entry widgets in the frames entry list'''
+        for entry in self.entry_dict.values():
+            entry.delete(first=0)
         
         
         
-    def display_entry(self,value):
-        self.prompt_entry.insert(str(value))
+    # def display_entry(self,value):
+    #     self.prompt_entry.insert(str(value))
         
-    def process_input(self):
-        pass
+    def enter_input(self):
+        '''Get and return a dict of input values from the Entry widgets on the page'''
+        entry_val_dict = {key:value.get()
+                          for key,value in self.entry_dict.items()}
+        return(entry_val_dict)
     
 class WelcomeFrame(GeneralFrame):
     def __init__(self,screen,screen_frame):
@@ -65,15 +88,20 @@ class WelcomeFrame(GeneralFrame):
         self.password_text = 'Enter Password'
         self.init_widgets()
         
+        # Make the password label and entry
         self.password_label = tk.Label(self.frame,text = self.password_text)
         self.password_entry = tk.Entry(self.frame)
+        
+        # Display the password label and entry
+        self.password_label.grid(row=3,column=0,sticky='NS')
+        self.password_entry.grid(row=3,column=1,sticky='NS')
+        # Add the password entry to the entry list to be able to clear
+        self.entry_dict['password'] = self.password_entry
     
         
 class MenuFrame(GeneralFrame):
     def __init__(self,screen,screen_frame):
         super().__init__(screen,screen_frame)
-        # self.screen = screen
-        # self.screen_frame = screen_frame
         
         self.title_text = 'Main Menu'
         self.option_items = ['View Balance','Withdraw Funds',
@@ -191,7 +219,7 @@ class Withdrawal(Transaction):
         
 class Deposit(Transaction):
     def __init__(self,account_num,amount):
-        super().__init(acount_num,
+        super().__init__(account_num,
                        transaction_type =  'Deposit')
         self.amount = amount
         
