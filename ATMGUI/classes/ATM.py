@@ -90,19 +90,20 @@ class ATM(object):
             self.curr_account_num = account_num
             self.screen.raise_frame('menu')
         else:
-            self.screen.invalid_customer_info()
+            self.screen.notify_invalid_entry()
             
     def handle_menu_entry(self,entry):
-        print(entry)
         valid_entry_dict = {'1':self.begin_balance_inquiry,
                             '2':self.begin_withdrawal,
                             '3':self.begin_deposit,
                             '4':self.begin_exit}
-        valid_entry_dict.get(entry,self.invalid_menu_entry)()
+        # get the desired screen or call the invalid entry function if entry invalid
+        valid_entry_dict.get(entry,self.screen.notify_invalid_entry)()
         
     def begin_balance_inquiry(self):
         # self.transaction = ViewBalance(self.account_num)
         self.screen.raise_frame('view_balance')
+        self.screen.display_balance(account_balance = self.bank_database.get_account_balance(self.curr_account_num))
         
     def begin_withdrawal(self):
         # self.transaction = Withdrawal(self.account_num)
@@ -113,7 +114,10 @@ class ATM(object):
         self.screen.raise_frame('deposit')
         
     def begin_exit(self):
+        '''Go to exit screen. Remove current account num and return to welcome.'''
         self.screen.raise_frame('exit')
+        self.root.after(ms=5000,func=lambda: self.screen.raise_frame('welcome'))
+        self.curr_account_num = None
         
     def invalid_menu_entry(self):
         print('The entry was invalid')
@@ -243,9 +247,15 @@ class ATMScreen(object):
         '''Deletes the last value in the entry box'''
         self.sub_frame_dict[self.current_frame].backspace()
     
-    def invalid_customer_info(self):
-        '''Handles case where there is invalid customer info'''
-        self.sub_frame_dict['welcome'].invalid_customer_info()
+        
+    def notify_invalid_entry(self):
+        '''Let the current frame notify the user that the entry was invalid'''
+        self.sub_frame_dict[self.current_frame].notify_invalid_menu_entry()
+        
+    def display_balance(self,account_balance):
+        '''Display the user's current balance'''
+        self.raise_frame('view_balance')
+        self.sub_frame_dict[self.current_frame].display_balance(account_balance)
         
 
 #%% ATMDepositSlot

@@ -19,6 +19,7 @@ class GeneralFrame(object):
         self.option_items = ['Options']
         # self.options_text = 'Options'
         self.prompt_text = 'Prompt'
+        self.invalid_text = 'Invalid entry. Please try again using numbers in list.'
         
         self.title_label = None
         self.options_label = None
@@ -79,10 +80,18 @@ class GeneralFrame(object):
                           for key,value in self.entry_dict.items()}
         return(entry_val_dict)
     
+    def notify_invalid_menu_entry(self):
+        '''Notify the user of an invalid menu entry. Clear entries. Return to normal after time'''
+        self.title_label.configure(text='{}\n({})'.format(self.title_text,
+                                                         self.invalid_text))
+        self.clear_entries()
+        self.frame.after(ms=10000,func = lambda: self.title_label.configure(text=self.title_text))
+    
 class WelcomeFrame(GeneralFrame):
     def __init__(self,screen,screen_frame):
         super().__init__(screen,screen_frame)
         self.title_text = 'Welcome to the ATM'
+        self.invalid_text = 'Account number or password are invalid. Please try again.'
         self.option_items = []
         self.prompt_text = 'Enter Account Number'
         self.password_text = 'Enter Password'
@@ -101,10 +110,7 @@ class WelcomeFrame(GeneralFrame):
         # Add the password entry to the entry list to be able to clear
         self.entry_dict['password'] = self.password_entry
         
-    def invalid_customer_info(self):
-        self.title_label.configure(text='\n'.join([self.title_text,
-                                                   'Account number or password are invalid']))
-        self.clear_entries()
+    
     
         
 class MenuFrame(GeneralFrame):
@@ -112,6 +118,7 @@ class MenuFrame(GeneralFrame):
         super().__init__(screen,screen_frame)
         
         self.title_text = 'Main Menu'
+        self.invalid_text = 'Invalid input. Choose an option from the menu.'
         self.option_items = ['View Balance','Withdraw Funds',
                              'Deposit Funds','Exit']
         # self.options_text = '\n'.join(['1 - View Balance',
@@ -121,6 +128,7 @@ class MenuFrame(GeneralFrame):
         self.prompt_text = 'Choose an option'
         
         self.init_widgets()
+        
 
 class ExitFrame(GeneralFrame):
     def __init__(self,screen,screen_frame):
@@ -140,13 +148,17 @@ class TransactionFrame(GeneralFrame):
         super().__init__(screen,screen_frame)
         self.transaction_type = ''
         self.option_items = ['Return to Main']
-        self.return_text = ''
-        self.return_label = None
+        self.return_text = tk.StringVar()
+        self.return_text.set('Start Text')
+        self.return_label = tk.Label(self.frame,textvariable=self.return_text)
+        self.return_label.grid(row=3,column=1,columnspan=2)
         
         
-    def set_return_text(self,text):
-        self.return_text = text
-        self.return_label.config(text=self.return_text)
+    def set_return_text(self,return_text):
+        self.return_text.set(return_text)
+        # self.return_label.configure(text=self.return_text)
+        # for some reason the text wouldn't update without regridding
+        # self.return_label.grid(row=3,column=1,columnspan=2)
         
         
         
@@ -168,6 +180,9 @@ class ViewBalanceFrame(TransactionFrame):
         
         # Call to make and place widgets
         self.init_widgets()
+        
+    def display_balance(self,account_balance):
+        self.set_return_text(return_text='Your balance is ${}'.format(account_balance))
         
         
 
