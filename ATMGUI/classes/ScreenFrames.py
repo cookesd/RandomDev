@@ -59,7 +59,7 @@ class GeneralFrame(object):
         self.options_label.grid(row=1,column=0,columnspan = 2,sticky = 'NSEW')
         self.prompt_label.grid(row=2,column=0,sticky='NS')
         self.prompt_entry.grid(row=2,column=1,sticky='NS')
-        self.prompt_entry.focus_set()
+        # self.prompt_entry.focus_set()
         
         # Make a list for the entry widgets
         self.entry_dict= {'prompt':self.prompt_entry}
@@ -197,6 +197,17 @@ class WithdrawalFrame(TransactionFrame):
         
         # Call to make and place widgets
         self.init_widgets()
+        
+    def notify_withdrawal(self,withdrawal_completed,withdrawal_amount,remaining_amount):
+        if withdrawal_completed == True:
+            ret_text = 'You withrew ${:.2f}. ${:.2f} remaining'.format(withdrawal_amount,
+                                                                               remaining_amount)
+            
+        else:
+            ret_text = 'Insufficient funds to withraw ${:.2f}. ${:.2f} remaining'.format(withdrawal_amount,
+                                                                                                 remaining_amount)
+            
+        self.return_text.set(ret_text)
         
         
 class DepositFrame(TransactionFrame):

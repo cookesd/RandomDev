@@ -41,7 +41,7 @@ class BankDatabase(object):
         self.account_db.loc[self.account_db[self.account_col] == account_num,
                             self.balance_col] = amount
     
-    def withdraw_amount(account_num,amount):
+    def withdraw_amount(self,account_num,amount):
         '''
         Withdraw money from account if there are sufficient funds
         
@@ -61,9 +61,14 @@ class BankDatabase(object):
             The amount of money remaining in the account.
 
         '''
-        account = self.account_db[self.account_df[self.account_col] == account_num].iloc[0,]
+        account = self.account_db[self.account_db[self.account_col] == account_num].iloc[0,]
         
         remaining_amount = account[self.balance_col] - amount
+        withdrawal_completed = False
         if remaining_amount >= 0:
             self.set_account_balance(account_num,remaining_amount)
-        return(remaining_amount)
+            withdrawal_completed = True
+        return(withdrawal_completed,remaining_amount)
+    
+    
+    

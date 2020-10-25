@@ -7,14 +7,13 @@ Created on Sun Sep 13 13:43:33 2020
 
 import tkinter as tk
 import pandas as pd
-import os
 from .ScreenFrames import (WelcomeFrame, MenuFrame, ExitFrame,
-                           ViewBalanceFrame, WithdrawalFrame, DepositFrame)
+                            ViewBalanceFrame, WithdrawalFrame, DepositFrame)
 from .BankDatabase import BankDatabase
 
 
 class ATM(object):
-    def __init__(self):
+    def __init__(self,dev_mode=False):
         self.root = tk.Tk()
         self.root.geometry('500x300')
         self.root.title('ATM App')
@@ -58,9 +57,9 @@ class ATM(object):
         self.screen_entry_func_dict = {'welcome':lambda **kwargs: self.validate_customer(account_num=kwargs['prompt'],password=kwargs['password']),
                                        'menu':lambda **kwargs: self.handle_menu_entry(entry=kwargs['prompt']),
                                        'exit':ExitFrame,
-                                       'view_balance':ViewBalanceFrame,
-                                       'withdrawal':WithdrawalFrame,
-                                       'deposit':DepositFrame}
+                                       'view_balance':lambda **kwargs: self.handle_balance_entry(entry=kwargs['prompt']),
+                                       'withdrawal':lambda **kwargs: self.handle_withdrawal_entry(entry=kwargs['prompt']),
+                                       'deposit':lambda **kwargs: self.handle_deposit_entry(entry=kwargs['prompt'])}
         self.curr_account_num = None
         
         self.root.mainloop()
@@ -119,9 +118,41 @@ class ATM(object):
         self.root.after(ms=5000,func=lambda: self.screen.raise_frame('welcome'))
         self.curr_account_num = None
         
-    def invalid_menu_entry(self):
-        print('The entry was invalid')
-        # pass
+    def handle_balance_entry(self,entry):
+        valid_entry_dict = {'1':self.return_to_menu}
+        # get the desired screen or call the invalid entry function if entry invalid
+        valid_entry_dict.get(entry,self.screen.notify_invalid_entry)()
+    
+    def handle_withdrawal_entry(self,entry):
+        valid_entry_dict = {'1':lambda: self.withdraw(20),
+                            '2':lambda: self.withdraw(40),
+                            '3':lambda: self.withdraw(60),
+                            '4':lambda: self.withdraw(100),
+                            '5':lambda: self.withdraw(200),
+                            '6':self.return_to_menu}
+        
+        # get the desired screen or call the invalid entry function if entry invalid
+        valid_entry_dict.get(entry,self.screen.notify_invalid_entry)()
+    
+    def handle_deposit_entry(self,entry):
+        valid_entry_dict = {'1':self.begin_balance_inquiry,
+                            '2':self.begin_withdrawal,
+                            '3':self.begin_deposit,
+                            '4':self.begin_exit}
+        # get the desired screen or call the invalid entry function if entry invalid
+        valid_entry_dict.get(entry,self.screen.notify_invalid_entry)()
+        
+    def return_to_menu(self):
+        self.screen.raise_frame('menu')
+        
+    def withdraw(self,withdrawal_amount):
+        withdrawal_completed,remaining_amount = self.bank_database.withdraw_amount(account_num = self.curr_account_num,
+                                                                                   amount=withdrawal_amount)
+        self.screen.notify_withdrawal(withdrawal_completed = withdrawal_completed,
+                                      withdrawal_amount = withdrawal_amount,
+                                      remaining_amount = remaining_amount)
+    
+    
     
 class ATMKeypad(object):
     def __init__(self,atm,atm_frame,relief_type,border_width):
@@ -242,7 +273,7 @@ class ATMScreen(object):
                 self.current_frame = frame
                 self.sub_frame_dict[frame].init_widgets() # resets the labels
                 self.sub_frame_dict[frame].clear_entries() # clears the entry boxes
-                # frame.prompt_entry.focus_set()
+                self.sub_frame_dict[frame].prompt_entry.focus() # set focus to the prompt entry widget
     def backspace(self):
         '''Deletes the last value in the entry box'''
         self.sub_frame_dict[self.current_frame].backspace()
@@ -256,6 +287,11 @@ class ATMScreen(object):
         '''Display the user's current balance'''
         self.raise_frame('view_balance')
         self.sub_frame_dict[self.current_frame].display_balance(account_balance)
+        
+    def notify_withdrawal(self,withdrawal_completed,withdrawal_amount,remaining_amount):
+        self.sub_frame_dict[self.current_frame].notify_withdrawal(withdrawal_completed = withdrawal_completed,
+                                                                  withdrawal_amount = withdrawal_amount,
+                                                                  remaining_amount = remaining_amount)
         
 
 #%% ATMDepositSlot
