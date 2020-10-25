@@ -7,6 +7,8 @@ Created on Sun Sep 13 13:43:33 2020
 
 import tkinter as tk
 import pandas as pd
+from functools import partial
+import re
 from .ScreenFrames import (WelcomeFrame, MenuFrame, ExitFrame,
                             ViewBalanceFrame, WithdrawalFrame, DepositFrame)
 from .BankDatabase import BankDatabase
@@ -15,7 +17,7 @@ from .BankDatabase import BankDatabase
 class ATM(object):
     def __init__(self,dev_mode=False):
         self.root = tk.Tk()
-        self.root.geometry('500x300')
+        self.root.geometry('500x500')
         self.root.title('ATM App')
         # self.frame = tk.Frame(self.root)
         # self.frame.pack(expand=True,fill='both')
@@ -50,7 +52,7 @@ class ATM(object):
         # Configure rows / columns to resize on window resize
         self.root.rowconfigure(0,weight=2)
         # self.frame.rowconfigure(1,weight=2)
-        self.root.rowconfigure(2,weight=1) # third row gets half as big as first
+        # self.root.rowconfigure(2,weight=1) # third row gets half as big as first
         self.root.columnconfigure(0,weight=1)
         self.root.columnconfigure(1,weight=1)
         
@@ -62,10 +64,44 @@ class ATM(object):
                                        'deposit':lambda **kwargs: self.handle_deposit_entry(entry=kwargs['prompt'])}
         self.curr_account_num = None
         
+        if dev_mode == True:
+            self.add_dev_mode_functionality()
         self.root.mainloop()
         
     def __repr__(self):
         print('This is the ATM')
+        
+        
+    def dev_mode_make_funct(self,f_name):
+        '''Returns a lambda function that raises the appropriate frame
+        Needed because dict comprehension lambda only keeps last var name
+        See here:
+            https://stackoverflow.com/questions/36805071/dictionary-comprehension-with-lambda-functions-gives-wrong-results
+        '''
+        print(f_name)
+        return(lambda x: self.screen.raise_frame(f_name))
+    
+    def add_dev_mode_functionality(self):
+        self.curr_account_num = 1234
+        self.dev_mode_frame = tk.Frame(self.root)
+        self.dev_mode_frame.grid(row=0,column = 3,rowspan=3,sticky='NW')
+        # Make a go-to button for each frame in the screen frame dict
+        self.dev_mode_button_dict = {}
+        for i,name in enumerate(self.screen.sub_frame_dict.keys()):
+            # Using partial to assign the command and the argument in the loop
+            # Lambda only stores the reference variable not the actual value
+            # see answer by Dologan here
+            # https://stackoverflow.com/questions/6920302/how-to-pass-arguments-to-a-button-command-in-tkinter/6921225
+            self.dev_mode_button_dict[name] = tk.Button(self.dev_mode_frame,
+                                                        text = 'Go to {}'.format(name),
+                                                        command = partial(self.screen.raise_frame,name))
+            self.dev_mode_button_dict[name].grid(row=i,column=1)
+
+    
+    # set the defaults for the entries
+        self.screen.sub_frame_dict['welcome'].prompt_entry.insert(index=0,string='1234')
+        self.screen.sub_frame_dict['welcome'].password_entry.insert(index=0,string='p@$$')
+        
         
     def display_user_input(self,value):
         '''Pass user input value to the screen to display'''
@@ -135,12 +171,18 @@ class ATM(object):
         valid_entry_dict.get(entry,self.screen.notify_invalid_entry)()
     
     def handle_deposit_entry(self,entry):
-        valid_entry_dict = {'1':self.begin_balance_inquiry,
-                            '2':self.begin_withdrawal,
-                            '3':self.begin_deposit,
-                            '4':self.begin_exit}
+        valid_entry_dict = {'0': self.return_to_menu}
         # get the desired screen or call the invalid entry function if entry invalid
-        valid_entry_dict.get(entry,self.screen.notify_invalid_entry)()
+        
+        reg_match = re.findall(r'^\d*\.?\d*$',entry)
+        if reg_match:
+            # if the value is numbers with/without decimals
+            valid_entry_dict.get(reg_match[0],lambda: self.deposit(float(reg_match[0])))()
+        else:
+            self.screen.notify_invalid_entry()
+                
+            
+        # valid_entry_dict.get(entry,self.screen.notify_invalid_entry)()
         
     def return_to_menu(self):
         self.screen.raise_frame('menu')
@@ -151,6 +193,13 @@ class ATM(object):
         self.screen.notify_withdrawal(withdrawal_completed = withdrawal_completed,
                                       withdrawal_amount = withdrawal_amount,
                                       remaining_amount = remaining_amount)
+        
+        if withdrawal_completed == True:
+            self.cash_dispenser.display_withdrawal(withdrawal_amount)
+            
+    def deposit(self,deposit_amount):
+        self.screen.notify_deposit(deposit_amount = deposit_amount)
+        self.deposit_slot.display_deposit(deposit_amount)
     
     
     
@@ -293,6 +342,9 @@ class ATMScreen(object):
                                                                   withdrawal_amount = withdrawal_amount,
                                                                   remaining_amount = remaining_amount)
         
+    def notify_deposit(self,deposit_amount):
+        self.sub_frame_dict[self.current_frame].notify_deposit(deposit_amount = deposit_amount)
+        
 
 #%% ATMDepositSlot
 class ATMDepositSlot(object):
@@ -303,6 +355,12 @@ class ATMDepositSlot(object):
                               relief=relief_type,borderwidth=border_width)
         self.name_label = tk.Label(self.frame,text='Deposit money here.')
         self.name_label.pack()
+        self.return_text = tk.StringVar('')
+        self.return_label = tk.Label(self.frame,textvariable = self.return_text)
+        self.return_label.pack()
+        
+    def display_deposit(self,amount):
+        self.return_text.set('Enter your ${:.2f} here.'.format(amount))
 
 #%% ATMCashDispenser
 class ATMCashDispenser(object):
@@ -313,6 +371,12 @@ class ATMCashDispenser(object):
                               relief=relief_type,borderwidth=border_width)
         self.name_label = tk.Label(self.frame,text='Receive money here.')
         self.name_label.pack()
+        self.return_text = tk.StringVar('')
+        self.return_label = tk.Label(self.frame,textvariable = self.return_text)
+        self.return_label.pack()
+        
+    def display_withdrawal(self,amount):
+        self.return_text.set('Retrieve your ${:.2f} here.'.format(amount))
         
     
 #%%

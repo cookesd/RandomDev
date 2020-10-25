@@ -15,10 +15,10 @@ class GeneralFrame(object):
         self.screen = screen
         self.screen_frame = screen_frame
         self.frame = tk.Frame(self.screen_frame)
-        self.title_text = 'Title'
+        self.title_text = tk.StringVar(value='Title')
         self.option_items = ['Options']
         # self.options_text = 'Options'
-        self.prompt_text = 'Prompt'
+        self.prompt_text = tk.StringVar(value='Choose an Option')
         self.invalid_text = 'Invalid entry. Please try again using numbers in list.'
         
         self.title_label = None
@@ -47,11 +47,12 @@ class GeneralFrame(object):
                 curr_widget.delete(str_length-1)
         
     def init_widgets(self):
-        self.title_label = tk.Label(self.frame,text=self.title_text)
+        self.title_label = tk.Label(self.frame,textvariable=self.title_text)
+        self.options_text = tk.StringVar(value='\n'.join([' - '.join([str(i+1),item])
+                                                          for i,item in enumerate(self.option_items)]))
         self.options_label = tk.Label(self.frame,
-                                      text='\n'.join([' - '.join([str(i+1),item])
-                                                           for i,item in enumerate(self.option_items)]))
-        self.prompt_label = tk.Label(self.frame,text=self.prompt_text)
+                                      textvariable=self.options_text)
+        self.prompt_label = tk.Label(self.frame,textvariable=self.prompt_text)
         self.prompt_entry = tk.Entry(self.frame)
         
         # Place widgets in frame
@@ -84,24 +85,29 @@ class GeneralFrame(object):
         '''Notify the user of an invalid menu entry. Clear entries. Return to normal after time'''
         self.title_label.configure(text='{}\n({})'.format(self.title_text,
                                                          self.invalid_text))
+        self.title_text.set('{}\n({})'.format(self.title_text.get(),self.invalid_text))
         self.clear_entries()
         self.frame.after(ms=10000,func = lambda: self.title_label.configure(text=self.title_text))
     
 class WelcomeFrame(GeneralFrame):
     def __init__(self,screen,screen_frame):
         super().__init__(screen,screen_frame)
-        self.title_text = 'Welcome to the ATM'
+        # self.title_text = 'Welcome to the ATM'
+        self.title_text.set('Welcome to the ATM')
         self.invalid_text = 'Account number or password are invalid. Please try again.'
         self.option_items = []
-        self.prompt_text = 'Enter Account Number'
-        self.password_text = 'Enter Password'
+        # self.prompt_text = 'Enter Account Number'
+        self.prompt_text.set('Enter Account Number')
+        # self.password_text = 'Enter Password'
+        self.password_text = tk.StringVar(value='Enter Password')
         self.init_widgets()
         
     def init_widgets(self):
         '''Initializes the widgets to their basic values'''
         super().init_widgets() # call the super init widgets function
         # Make the password label and entry
-        self.password_label = tk.Label(self.frame,text = self.password_text)
+        # self.password_label = tk.Label(self.frame,text = self.password_text)
+        self.password_label = tk.Label(self.frame,textvar = self.password_text)
         self.password_entry = tk.Entry(self.frame)
         
         # Display the password label and entry
@@ -117,7 +123,7 @@ class MenuFrame(GeneralFrame):
     def __init__(self,screen,screen_frame):
         super().__init__(screen,screen_frame)
         
-        self.title_text = 'Main Menu'
+        self.title_text.set('Main Menu')
         self.invalid_text = 'Invalid input. Choose an option from the menu.'
         self.option_items = ['View Balance','Withdraw Funds',
                              'Deposit Funds','Exit']
@@ -125,7 +131,7 @@ class MenuFrame(GeneralFrame):
         #                                '2 - Withdraw Funds',
         #                                '3 - Deposit Funds',
         #                                '4 - Exit'])
-        self.prompt_text = 'Choose an option'
+        self.prompt_text.set('Choose an option')
         
         self.init_widgets()
         
@@ -135,8 +141,8 @@ class ExitFrame(GeneralFrame):
         # self.screen = screen
         # self.screen_frame = screen_frame
         super().__init__(screen,screen_frame)
-        self.title_text = '\n'.join(['Exit',
-                                     'Thank you. Please come again.'])
+        self.title_text.set('\n'.join(['Exit',
+                                       'Thank you. Please come again.']))
         self.option_items = []
         self.prompt_text = ''
         
@@ -148,8 +154,7 @@ class TransactionFrame(GeneralFrame):
         super().__init__(screen,screen_frame)
         self.transaction_type = ''
         self.option_items = ['Return to Main']
-        self.return_text = tk.StringVar()
-        self.return_text.set('Start Text')
+        self.return_text = tk.StringVar(value='')
         self.return_label = tk.Label(self.frame,textvariable=self.return_text)
         self.return_label.grid(row=3,column=1,columnspan=2)
         
@@ -164,7 +169,7 @@ class TransactionFrame(GeneralFrame):
         
     def init_widgets(self):
         super().init_widgets()
-        self.return_label = tk.Label(self.frame,text = self.return_text)
+        self.return_label = tk.Label(self.frame,textvariable= self.return_text)
         
     def pass_transaction_info(self):
         self.screen.pass_transaction_info(self.frame.prompt_entry.get())
@@ -175,7 +180,7 @@ class TransactionFrame(GeneralFrame):
 class ViewBalanceFrame(TransactionFrame):
     def __init__(self,screen,screen_frame):
         super().__init__(screen,screen_frame)
-        self.title_text = 'View Balance'
+        self.title_text.set('View Balance')
         self.transaction_type = ViewBalance
         
         # Call to make and place widgets
@@ -189,7 +194,7 @@ class ViewBalanceFrame(TransactionFrame):
 class WithdrawalFrame(TransactionFrame):
     def __init__(self,screen,screen_frame):
         super().__init__(screen,screen_frame)
-        self.title_text = 'Withdraw'
+        self.title_text.set('Withdraw')
         self.option_items = [*['${:.2f}'.format(i) for i in [20,40,60,100,200]],
                              'Return to Main']
         self.transaction_type = Withdrawal
@@ -213,11 +218,26 @@ class WithdrawalFrame(TransactionFrame):
 class DepositFrame(TransactionFrame):
     def __init__(self,screen,screen_frame):
         super().__init__(screen,screen_frame)
-        self.title_text = 'Deposit'
+        self.title_text.set('Deposit')
         self.transaction_type = Deposit
+        self.prompt_text.set('\n'.join(['Enter value to deposit',
+                                        'or 0 to return to menu']))
+        self.option_items = ['Return to Main']
         
         # Call to make and place widgets
         self.init_widgets()
+        
+    # def init_widgets(self):
+    #     super().init_widgets()
+    #     self.return_label = tk.Label(self.frame,text = self.return_text)
+        
+    def init_widgets(self):
+        super().init_widgets()
+        self.options_text.set('\n'.join([' - '.join([str(i),item])
+                                          for i,item in enumerate(self.option_items)]))
+        
+    def notify_deposit(self,deposit_amount):
+        self.return_text.set('Enter your ${:.2f} in deposit slot below.'.format(deposit_amount))
         
         
 
